@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,24 +21,58 @@ export default function RegisterPage() {
     companyName: '', taxId: '', companyAddress: '', companyPhone: '',
     branchName: '', branchAddress: '', branchPhone: '',
   })
-  const { register } = useAuth()
   const router = useRouter()
 
   function updateForm(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  function validateStep(): boolean {
+    if (step === 0) {
+      if (!form.fullName.trim()) { toast.error('შეიყვანეთ სახელი'); return false }
+      if (!form.email.trim()) { toast.error('შეიყვანეთ ელ. ფოსტა'); return false }
+      if (form.password.length < 8) { toast.error('პაროლი უნდა იყოს მინ. 8 სიმბოლო'); return false }
+      if (form.password !== form.confirmPassword) { toast.error('პაროლები არ ემთხვევა'); return false }
+    }
+    if (step === 1) {
+      if (!form.companyName.trim()) { toast.error('შეიყვანეთ კომპანიის სახელი'); return false }
+    }
+    return true
+  }
+
+  function handleNext() {
+    if (validateStep()) setStep(s => s + 1)
+  }
+
   async function handleSubmit() {
+    if (!validateStep()) return
     setLoading(true)
     try {
-      const success = await register({
-        email: form.email, password: form.password, fullName: form.fullName,
-        companyName: form.companyName, branchName: form.branchName,
+      const supabase = createClient()
+      const { error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+            `${window.location.origin}/auth/callback`,
+          data: {
+            full_name: form.fullName,
+            company_name: form.companyName || undefined,
+          },
+        },
       })
-      if (success) {
-        toast.success('რეგისტრაცია წარმატებით დასრულდა')
-        router.push('/branch-1')
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          toast.error('ეს ელ. ფოსტა უკვე რეგისტრირებულია')
+        } else {
+          toast.error(error.message)
+        }
+        return
       }
+
+      toast.success('რეგისტრაცია წარმატებულია! შეამოწმეთ ელ. ფოსტა.')
+      router.push('/sign-up-success')
     } catch {
       toast.error('რეგისტრაცია ვერ მოხერხდა')
     } finally {
@@ -147,7 +181,7 @@ export default function RegisterPage() {
             </Button>
             {step < 2 ? (
               <Button
-                onClick={() => setStep(s => s + 1)}
+                onClick={handleNext}
                 className="bg-dasta-green text-primary-foreground hover:bg-dasta-green-dark"
               >
                 {'შემდეგი'}

@@ -82,9 +82,10 @@ export function Topbar({ onMenuClick, onSearchClick }: { onMenuClick: () => void
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="text-dasta-danger"
-              onClick={() => {
-                logout()
+              onClick={async () => {
+                await logout()
                 router.push('/login')
+                router.refresh()
               }}
             >
               <LogOut className="size-4" />

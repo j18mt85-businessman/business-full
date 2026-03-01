@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
+import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -12,22 +12,38 @@ import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@dasta.ge')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
   const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!email || !password) {
+      toast.error('შეავსეთ ყველა ველი')
+      return
+    }
     setLoading(true)
     try {
-      const success = await login(email, password)
-      if (success) {
-        toast.success('წარმატებით შეხვედით სისტემაში')
-        router.push('/branch-1')
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          toast.error('არასწორი ელ. ფოსტა ან პაროლი')
+        } else if (error.message.includes('Email not confirmed')) {
+          toast.error('ელ. ფოსტა არ არის დადასტურებული. შეამოწმეთ თქვენი inbox.')
+        } else {
+          toast.error(error.message)
+        }
+        return
       }
+      toast.success('წარმატებით შეხვედით სისტემაში')
+      router.push('/')
+      router.refresh()
     } catch {
       toast.error('შესვლა ვერ მოხერხდა')
     } finally {
@@ -57,7 +73,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@dasta.ge"
+                placeholder="example@dasta.ge"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -115,12 +131,6 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Demo hint */}
-      <div className="rounded-lg border border-dasta-green/20 bg-accent p-3 text-center text-sm text-muted-foreground">
-        <span className="font-medium text-dasta-green">{'Demo:'}</span>
-        {' დააჭირეთ "შესვლა" ღილაკს სადემო რეჟიმში შესასვლელად'}
-      </div>
     </div>
   )
 }
