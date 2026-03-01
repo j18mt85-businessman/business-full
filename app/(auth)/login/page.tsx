@@ -42,8 +42,8 @@ export default function LoginPage() {
         return
       }
       toast.success('წარმატებით შეხვედით სისტემაში')
-      router.push('/')
-      router.refresh()
+      // Hard redirect to force server-side root page to run (gets branch and redirects to dashboard)
+      window.location.href = '/'
     } catch {
       toast.error('შესვლა ვერ მოხერხდა')
     } finally {
