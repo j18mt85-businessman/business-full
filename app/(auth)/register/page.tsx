@@ -28,19 +28,55 @@ export default function RegisterPage() {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
+  function validateStep(): boolean {
+    if (step === 0) {
+      if (!form.fullName.trim()) { toast.error('შეიყვანეთ სრული სახელი'); return false }
+      if (!form.email.trim()) { toast.error('შეიყვანეთ ელ. ფოსტა'); return false }
+      if (form.password.length < 6) { toast.error('პაროლი უნდა იყოს მინ. 6 სიმბოლო'); return false }
+      if (form.password !== form.confirmPassword) { toast.error('პაროლები არ ემთხვევა'); return false }
+    }
+    if (step === 1) {
+      if (!form.companyName.trim()) { toast.error('შეიყვანეთ კომპანიის სახელი'); return false }
+    }
+    if (step === 2) {
+      if (!form.branchName.trim()) { toast.error('შეიყვანეთ ფილიალის სახელი'); return false }
+    }
+    return true
+  }
+
+  function handleNext() {
+    if (validateStep()) {
+      setStep(s => s + 1)
+    }
+  }
+
   async function handleSubmit() {
+    if (!validateStep()) return
     setLoading(true)
     try {
       const success = await register({
-        email: form.email, password: form.password, fullName: form.fullName,
-        companyName: form.companyName, branchName: form.branchName,
+        email: form.email,
+        password: form.password,
+        fullName: form.fullName,
+        companyName: form.companyName,
+        branchName: form.branchName,
+        taxId: form.taxId,
+        companyAddress: form.companyAddress,
+        companyPhone: form.companyPhone,
+        branchAddress: form.branchAddress,
+        branchPhone: form.branchPhone,
       })
       if (success) {
-        toast.success('რეგისტრაცია წარმატებით დასრულდა')
-        router.push('/branch-1')
+        toast.success('რეგისტრაცია წარმატებით დასრულდა! გთხოვთ შეამოწმოთ ელ. ფოსტა დასადასტურებლად.')
+        router.push('/login')
       }
-    } catch {
-      toast.error('რეგისტრაცია ვერ მოხერხდა')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'რეგისტრაცია ვერ მოხერხდა'
+      if (message.includes('already registered')) {
+        toast.error('ეს ელ. ფოსტა უკვე რეგისტრირებულია')
+      } else {
+        toast.error(message)
+      }
     } finally {
       setLoading(false)
     }
@@ -89,7 +125,7 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label>{'პაროლი'}</Label>
-                <Input type="password" placeholder="მინ. 8 სიმბოლო" value={form.password} onChange={e => updateForm('password', e.target.value)} />
+                <Input type="password" placeholder="მინ. 6 სიმბოლო" value={form.password} onChange={e => updateForm('password', e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>{'პაროლის დადასტურება'}</Label>
@@ -147,7 +183,7 @@ export default function RegisterPage() {
             </Button>
             {step < 2 ? (
               <Button
-                onClick={() => setStep(s => s + 1)}
+                onClick={handleNext}
                 className="bg-dasta-green text-primary-foreground hover:bg-dasta-green-dark"
               >
                 {'შემდეგი'}
@@ -159,7 +195,12 @@ export default function RegisterPage() {
                 className="bg-dasta-green text-primary-foreground hover:bg-dasta-green-dark"
                 disabled={loading}
               >
-                {loading ? 'რეგისტრაცია...' : 'რეგისტრაცია'}
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="size-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                    {'რეგისტრაცია...'}
+                  </span>
+                ) : 'რეგისტრაცია'}
               </Button>
             )}
           </div>

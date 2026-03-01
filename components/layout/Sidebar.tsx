@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useBranch } from '@/contexts/BranchContext'
 import { useInventory } from '@/contexts/InventoryContext'
@@ -19,6 +19,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function DastaSidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { branches, currentBranch, setCurrentBranch } = useBranch()
   const { alerts } = useInventory()
   const [branchOpen, setBranchOpen] = useState(false)
@@ -83,6 +84,7 @@ export function DastaSidebar({ open, onClose }: { open?: boolean; onClose?: () =
                   onClick={() => {
                     setCurrentBranch(branch)
                     setBranchOpen(false)
+                    router.push(`/${branch.id}`)
                   }}
                   className="flex w-full items-center gap-3 px-3 py-2.5 text-sm text-sidebar-foreground hover:bg-sidebar-accent/80"
                 >
@@ -138,12 +140,9 @@ export function DastaSidebar({ open, onClose }: { open?: boolean; onClose?: () =
         {/* Footer */}
         <div className="border-t border-sidebar-border p-4">
           <div className="rounded-lg bg-sidebar-accent/50 p-3">
-            <div className="text-xs font-medium text-sidebar-foreground/60">{'გეგმა'}</div>
-            <div className="text-sm font-semibold text-dasta-green">{'პროფესიონალი'}</div>
-            <div className="mt-1 h-1.5 rounded-full bg-sidebar-border">
-              <div className="h-full w-2/5 rounded-full bg-gradient-to-r from-dasta-green to-dasta-green-dark" />
-            </div>
-            <div className="mt-1 text-xs text-sidebar-foreground/40">{'20 / 5,000 პროდუქტი'}</div>
+            <div className="text-xs font-medium text-sidebar-foreground/60">{'ფილიალი'}</div>
+            <div className="text-sm font-semibold text-dasta-green">{currentBranch.name}</div>
+            <div className="mt-1 text-xs text-sidebar-foreground/40">{currentBranch.address || 'მისამართი არ არის'}</div>
           </div>
         </div>
       </aside>

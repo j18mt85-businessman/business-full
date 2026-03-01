@@ -12,8 +12,8 @@ import { Eye, EyeOff, LogIn } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@dasta.ge')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
@@ -21,15 +21,26 @@ export default function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!email || !password) {
+      toast.error('შეიყვანეთ ელ. ფოსტა და პაროლი')
+      return
+    }
     setLoading(true)
     try {
       const success = await login(email, password)
       if (success) {
         toast.success('წარმატებით შეხვედით სისტემაში')
-        router.push('/branch-1')
+        router.push('/')
       }
-    } catch {
-      toast.error('შესვლა ვერ მოხერხდა')
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'შესვლა ვერ მოხერხდა'
+      if (message.includes('Invalid login credentials')) {
+        toast.error('არასწორი ელ. ფოსტა ან პაროლი')
+      } else if (message.includes('Email not confirmed')) {
+        toast.error('გთხოვთ დაადასტუროთ ელ. ფოსტა')
+      } else {
+        toast.error(message)
+      }
     } finally {
       setLoading(false)
     }
@@ -57,7 +68,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@dasta.ge"
+                placeholder="your@email.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
@@ -115,12 +126,6 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Demo hint */}
-      <div className="rounded-lg border border-dasta-green/20 bg-accent p-3 text-center text-sm text-muted-foreground">
-        <span className="font-medium text-dasta-green">{'Demo:'}</span>
-        {' დააჭირეთ "შესვლა" ღილაკს სადემო რეჟიმში შესასვლელად'}
-      </div>
     </div>
   )
 }

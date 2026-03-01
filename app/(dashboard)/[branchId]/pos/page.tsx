@@ -178,7 +178,7 @@ const paymentMethods = [
   { id: 'transfer' as PaymentMethod, label: 'გადარიცხვა', icon: ArrowRightLeft, color: 'bg-amber-600 hover:bg-amber-700' },
 ]
 
-function PaymentModal({ open, onClose, total, onComplete }: { open: boolean; onClose: () => void; total: number; onComplete: (m: PaymentMethod, cash?: number) => void }) {
+function PaymentModal({ open, onClose, total, onComplete }: { open: boolean; onClose: () => void; total: number; onComplete: (m: PaymentMethod, cash?: number) => void | Promise<void> }) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null)
   const [cashReceived, setCashReceived] = useState('')
   const change = selectedMethod === 'cash' && cashReceived ? Number(cashReceived) - total : 0
@@ -303,7 +303,7 @@ function ReceiptView({ open, onClose, sale }: { open: boolean; onClose: () => vo
 
 /* ───── Main POS Page ───── */
 export default function POSPage() {
-  const { products, updateStock } = useInventory()
+  const { products } = useInventory()
   const { cart, cartTotal, cartDiscount, addToCart, removeFromCart, updateCartQuantity, clearCart, setCartDiscount, completeSale } = useSales()
   const { customers } = useCustomers()
 
@@ -323,10 +323,9 @@ export default function POSPage() {
     setPaymentOpen(true)
   }
 
-  function handlePaymentComplete(method: PaymentMethod, cashReceived?: number) {
+  async function handlePaymentComplete(method: PaymentMethod, cashReceived?: number) {
     const customer = selectedCustomerId ? customers.find(c => c.id === selectedCustomerId) : undefined
-    const sale = completeSale(method, cashReceived, customer?.id, customer?.fullName)
-    sale.items.forEach(item => updateStock(item.productId, -item.quantity))
+    const sale = await completeSale(method, cashReceived, customer?.id, customer?.fullName)
     setLastSale(sale)
     setPaymentOpen(false)
     setReceiptOpen(true)
