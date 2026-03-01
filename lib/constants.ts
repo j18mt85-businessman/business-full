@@ -60,6 +60,13 @@ export const SIDEBAR_NAV = [
     title: 'ბუღალტერია',
     items: [
       { label: 'სალარო', href: '/cash-register', icon: 'Landmark' },
+      { label: 'ბუღალტერია', href: '/accounting', icon: 'Calculator' },
+    ],
+  },
+  {
+    title: 'RS.GE',
+    items: [
+      { label: 'RS.GE ინტეგრაცია', href: '/rsge', icon: 'Globe' },
     ],
   },
   {

@@ -9,12 +9,12 @@ import { cn } from '@/lib/utils'
 import { SIDEBAR_NAV } from '@/lib/constants'
 import {
   LayoutDashboard, ShoppingCart, Package, Tag, Receipt, Users, Truck,
-  Landmark, Bell, Settings, ChevronDown, Check, Store, X,
+  Landmark, Bell, Settings, ChevronDown, Check, Store, X, Calculator, Globe,
 } from 'lucide-react'
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, ShoppingCart, Package, Tag, Receipt, Users, Truck,
-  Landmark, Bell, Settings,
+  Landmark, Bell, Settings, Calculator, Globe,
 }
 
 export function DastaSidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {

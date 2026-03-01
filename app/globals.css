@@ -163,19 +163,17 @@
   background: #64748b;
 }
 
-/* Print styles for receipts */
+/* Print styles */
 @media print {
-  body * {
-    visibility: hidden;
+  aside, header, .topbar, [data-sidebar] {
+    display: none !important;
   }
-  .print-receipt,
-  .print-receipt * {
-    visibility: visible;
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
   }
-  .print-receipt {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 80mm;
+  .no-print {
+    display: none !important;
   }
 }

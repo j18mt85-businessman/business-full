@@ -12,12 +12,15 @@ import {
 } from '@/components/ui/dialog'
 import {
   Search, Receipt, DollarSign, TrendingUp, Eye, RotateCcw,
-  Filter, Calendar,
+  Filter, Calendar, Printer, FileText,
 } from 'lucide-react'
 import type { Sale } from '@/lib/types'
+import { printReceipt, printReport } from '@/lib/print-utils'
+import { useBranch } from '@/contexts/BranchContext'
 
 export default function SalesPage() {
   const { sales, returnSale } = useSales()
+  const { currentBranch } = useBranch()
   const [search, setSearch] = useState('')
   const [paymentFilter, setPaymentFilter] = useState<string>('all')
   const [dateFilter, setDateFilter] = useState('')
@@ -45,6 +48,67 @@ export default function SalesPage() {
   const totalChecks = sales.length
   const avgCheck = totalChecks > 0 ? totalRevenue / totalChecks : 0
 
+  function handlePrintReceipt(sale: Sale) {
+    printReceipt({
+      branchName: currentBranch.name,
+      branchAddress: currentBranch.address,
+      receiptNumber: sale.receiptNumber,
+      date: formatDate(sale.createdAt, { time: true }),
+      customerName: sale.customerName,
+      items: sale.items.map(i => ({ name: i.productName, qty: i.quantity, price: i.unitPrice, total: i.total })),
+      subtotal: sale.subtotal,
+      discount: sale.discount,
+      total: sale.total,
+      paymentMethod: getPaymentLabel(sale.paymentMethod),
+      cashReceived: sale.cashReceived,
+      change: sale.change,
+    })
+  }
+
+  function handlePrintReport() {
+    const cashSales = sales.filter(s => s.paymentMethod === 'cash' && s.status === 'completed').reduce((sum, s) => sum + s.total, 0)
+    const cardSales = sales.filter(s => s.paymentMethod === 'card' && s.status === 'completed').reduce((sum, s) => sum + s.total, 0)
+    const transferSales = sales.filter(s => s.paymentMethod === 'transfer' && s.status === 'completed').reduce((sum, s) => sum + s.total, 0)
+    const returned = sales.filter(s => s.status === 'returned').reduce((sum, s) => sum + s.total, 0)
+
+    printReport({
+      title: 'გაყიდვების ანგარიში',
+      branchName: currentBranch.name,
+      period: 'ყველა პერიოდი',
+      generatedAt: new Date().toLocaleString('ka-GE'),
+      sections: [
+        {
+          title: 'ზოგადი მაჩვენებლები',
+          rows: [
+            { label: 'ჯამური გაყიდვები', value: `${formatCurrency(totalRevenue)}` },
+            { label: 'ჩეკების რაოდენობა', value: `${totalChecks}` },
+            { label: 'საშუალო ჩეკი', value: `${formatCurrency(avgCheck)}` },
+            { label: 'დაბრუნებები', value: `${formatCurrency(returned)}` },
+          ],
+        },
+        {
+          title: 'გადახდის მეთოდები',
+          rows: [
+            { label: 'ნაღდი', value: `${formatCurrency(cashSales)}` },
+            { label: 'ბარათი', value: `${formatCurrency(cardSales)}` },
+            { label: 'გადარიცხვა', value: `${formatCurrency(transferSales)}` },
+          ],
+        },
+      ],
+      tableData: {
+        headers: ['ჩეკი', 'თარიღი', 'კლიენტი', 'გადახდა', 'სტატუსი', 'თანხა'],
+        rows: sales.slice(0, 50).map(s => [
+          s.receiptNumber,
+          formatDate(s.createdAt, { time: true }),
+          s.customerName || '-',
+          getPaymentLabel(s.paymentMethod),
+          getStatusLabel(s.status),
+          formatCurrency(s.total),
+        ]),
+      },
+    })
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -52,6 +116,10 @@ export default function SalesPage() {
           <h1 className="text-2xl font-bold text-foreground text-balance">{'გაყიდვების ისტორია'}</h1>
           <p className="text-sm text-muted-foreground">{sales.length} {'ტრანზაქცია'}</p>
         </div>
+        <Button variant="outline" onClick={handlePrintReport}>
+          <FileText className="size-4" />
+          {'ანგარიშის ბეჭდვა'}
+        </Button>
       </div>
 
       {/* Stats */}
@@ -164,6 +232,9 @@ export default function SalesPage() {
                         <Button variant="ghost" size="icon" className="size-8" onClick={() => setSelectedSale(sale)}>
                           <Eye className="size-3.5" />
                         </Button>
+                        <Button variant="ghost" size="icon" className="size-8 text-dasta-info" onClick={() => handlePrintReceipt(sale)}>
+                          <Printer className="size-3.5" />
+                        </Button>
                         {sale.status === 'completed' && (
                           <Button variant="ghost" size="icon" className="size-8 text-dasta-danger" onClick={() => returnSale(sale.id)}>
                             <RotateCcw className="size-3.5" />
@@ -223,6 +294,10 @@ export default function SalesPage() {
                 <span>{'ჯამი'}</span>
                 <span className="text-dasta-green">{formatCurrency(selectedSale.total)}</span>
               </div>
+              <Button variant="outline" className="w-full" onClick={() => handlePrintReceipt(selectedSale)}>
+                <Printer className="size-4" />
+                {'ჩეკის დაბეჭდვა'}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
