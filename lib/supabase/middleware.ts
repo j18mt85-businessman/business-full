@@ -54,49 +54,11 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && (isAuthPage || request.nextUrl.pathname === '/')) {
-    // User is logged in on auth page or root -> find their branch and redirect to dashboard
-    try {
-      // Try profile_branches first
-      const { data: pb } = await supabase
-        .from('profile_branches')
-        .select('branch_id')
-        .eq('profile_id', user.id)
-        .limit(1)
-        .single()
-
-      if (pb?.branch_id) {
-        const url = request.nextUrl.clone()
-        url.pathname = `/${pb.branch_id}`
-        return NextResponse.redirect(url)
-      }
-
-      // Fallback: get branch from company
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', user.id)
-        .single()
-
-      if (profile?.company_id) {
-        const { data: branch } = await supabase
-          .from('branches')
-          .select('id')
-          .eq('company_id', profile.company_id)
-          .eq('is_active', true)
-          .limit(1)
-          .single()
-
-        if (branch?.id) {
-          const url = request.nextUrl.clone()
-          url.pathname = `/${branch.id}`
-          return NextResponse.redirect(url)
-        }
-      }
-    } catch (e) {
-      // If DB query fails, let the request through to root page fallback
-      console.error('[v0] Middleware branch lookup failed:', e)
-    }
+  if (user && isAuthPage) {
+    // User is logged in but on auth page -> redirect to root (which handles branch lookup)
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
   }
 
   return supabaseResponse

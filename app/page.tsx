@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 
 export default async function RootPage() {
   const supabase = await createClient()
@@ -13,22 +13,28 @@ export default async function RootPage() {
     redirect('/login')
   }
 
+  // Use admin client (service role) to bypass RLS
+  const admin = createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+
   // Get user's first branch
-  const { data: profileBranches, error: pbError } = await supabase
+  const { data: pb, error: pbError } = await admin
     .from('profile_branches')
     .select('branch_id')
     .eq('profile_id', user.id)
     .limit(1)
     .single()
 
-  console.log('[v0] Root page - profileBranches:', profileBranches, 'error:', pbError?.message)
+  console.log('[v0] Root page - profile_branches:', pb, 'error:', pbError?.message)
 
-  if (profileBranches?.branch_id) {
-    redirect(`/${profileBranches.branch_id}`)
+  if (pb?.branch_id) {
+    redirect(`/${pb.branch_id}`)
   }
 
-  // Fallback: get any branch from user's company
-  const { data: profile, error: profileError } = await supabase
+  // Fallback: get branch from profiles -> company -> branches
+  const { data: profile, error: profileError } = await admin
     .from('profiles')
     .select('company_id')
     .eq('id', user.id)
@@ -37,7 +43,7 @@ export default async function RootPage() {
   console.log('[v0] Root page - profile:', profile, 'error:', profileError?.message)
 
   if (profile?.company_id) {
-    const { data: branch, error: branchError } = await supabase
+    const { data: branch, error: branchError } = await admin
       .from('branches')
       .select('id')
       .eq('company_id', profile.company_id)
@@ -62,8 +68,8 @@ export default async function RootPage() {
         </p>
         <form action={async () => {
           'use server'
-          const supabase = await createClient()
-          await supabase.auth.signOut()
+          const sb = await createClient()
+          await sb.auth.signOut()
           redirect('/login')
         }}>
           <button 

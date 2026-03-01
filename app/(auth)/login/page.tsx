@@ -43,55 +43,18 @@ export default function LoginPage() {
       }
       toast.success('წარმატებით შეხვედით სისტემაში')
 
-      // After login, find user's branch and redirect directly
+      // Use API route to find user's branch (bypasses RLS)
       try {
-        const { data: { user: loggedUser } } = await supabase.auth.getUser()
-        console.log('[v0] Login - user:', loggedUser?.id)
-
-        if (loggedUser) {
-          // Try profile_branches
-          const { data: pb, error: pbErr } = await supabase
-            .from('profile_branches')
-            .select('branch_id')
-            .eq('profile_id', loggedUser.id)
-            .limit(1)
-            .single()
-
-          console.log('[v0] Login - profile_branches:', pb, 'error:', pbErr?.message)
-
-          if (pb?.branch_id) {
-            window.location.href = `/${pb.branch_id}`
-            return
-          }
-
-          // Fallback: get branch from profiles -> branches
-          const { data: profile, error: profileErr } = await supabase
-            .from('profiles')
-            .select('company_id')
-            .eq('id', loggedUser.id)
-            .single()
-
-          console.log('[v0] Login - profile:', profile, 'error:', profileErr?.message)
-
-          if (profile?.company_id) {
-            const { data: branch, error: branchErr } = await supabase
-              .from('branches')
-              .select('id')
-              .eq('company_id', profile.company_id)
-              .eq('is_active', true)
-              .limit(1)
-              .single()
-
-            console.log('[v0] Login - branch:', branch, 'error:', branchErr?.message)
-
-            if (branch?.id) {
-              window.location.href = `/${branch.id}`
-              return
-            }
-          }
+        const res = await fetch('/api/auth/branch')
+        const data = await res.json()
+        console.log('[v0] Login - branch API response:', data)
+        
+        if (data.branchId) {
+          window.location.href = `/${data.branchId}`
+          return
         }
       } catch (e) {
-        console.error('[v0] Login - branch lookup error:', e)
+        console.error('[v0] Login - branch API error:', e)
       }
 
       // Final fallback: go to root
