@@ -38,7 +38,7 @@ export default function CashRegisterPage() {
 
   function handleMove() {
     if (!currentSession || !moveAmount) return
-    addCashMovement(moveType, Number(moveAmount), moveNote || (moveType === 'in' ? 'ნაღდის შეტანა' : 'ნაღდის გატანა'))
+    addMovement(moveType, Number(moveAmount), moveNote || (moveType === 'in' ? 'ნაღდის შეტანა' : 'ნაღდის გატანა'))
     setMoveAmount('')
     setMoveNote('')
     setIsMoveDialog(false)
@@ -97,15 +97,17 @@ export default function CashRegisterPage() {
               </div>
               <div className="rounded-lg bg-card p-4 text-center">
                 <p className="text-xs text-muted-foreground">{'ნაღდი გაყიდვები'}</p>
-                <p className="mt-1 text-xl font-bold text-dasta-success">{formatCurrency(currentSession.cashSales)}</p>
+                <p className="mt-1 text-xl font-bold text-dasta-success">{formatCurrency(currentSession.totalCash)}</p>
               </div>
               <div className="rounded-lg bg-card p-4 text-center">
                 <p className="text-xs text-muted-foreground">{'ბარათით გაყიდვები'}</p>
-                <p className="mt-1 text-xl font-bold text-dasta-info">{formatCurrency(currentSession.cardSales)}</p>
+                <p className="mt-1 text-xl font-bold text-dasta-info">{formatCurrency(currentSession.totalCard)}</p>
               </div>
               <div className="rounded-lg bg-card p-4 text-center">
                 <p className="text-xs text-muted-foreground">{'მიმდინარე ბალანსი'}</p>
-                <p className="mt-1 text-xl font-bold text-dasta-green">{formatCurrency(currentSession.currentBalance)}</p>
+                <p className="mt-1 text-xl font-bold text-dasta-green">{formatCurrency(
+                  currentSession.openingBalance + currentSession.totalCash + currentSession.movements.reduce((s, m) => s + (m.type === 'in' ? m.amount : -m.amount), 0)
+                )}</p>
               </div>
             </div>
 
@@ -122,7 +124,7 @@ export default function CashRegisterPage() {
                         ) : (
                           <ArrowUpRight className="size-4 text-dasta-danger" />
                         )}
-                        <span>{m.note}</span>
+                        <span>{m.reason}</span>
                       </div>
                       <span className={`font-bold ${m.type === 'in' ? 'text-dasta-success' : 'text-dasta-danger'}`}>
                         {m.type === 'in' ? '+' : '-'}{formatCurrency(m.amount)}
@@ -164,20 +166,20 @@ export default function CashRegisterPage() {
                 </tr>
               </thead>
               <tbody>
-                {sessions.filter(s => s.status === 'closed').map(session => (
+                {pastSessions.filter(s => s.status === 'closed').map(session => (
                   <tr key={session.id} className="border-b border-border/50 last:border-0">
                     <td className="p-3 text-muted-foreground">{formatDate(session.openedAt, { time: true })}</td>
                     <td className="p-3 text-muted-foreground">{session.closedAt ? formatDate(session.closedAt, { time: true }) : '-'}</td>
                     <td className="p-3">{formatCurrency(session.openingBalance)}</td>
-                    <td className="p-3 text-dasta-success">{formatCurrency(session.cashSales)}</td>
-                    <td className="p-3 text-dasta-info">{formatCurrency(session.cardSales)}</td>
+                    <td className="p-3 text-dasta-success">{formatCurrency(session.totalCash)}</td>
+                    <td className="p-3 text-dasta-info">{formatCurrency(session.totalCard)}</td>
                     <td className="p-3">
                       <Badge variant="secondary" className="text-xs">{'დახურული'}</Badge>
                     </td>
                     <td className="p-3 text-right font-semibold">{formatCurrency(session.closingBalance || 0)}</td>
                   </tr>
                 ))}
-                {sessions.filter(s => s.status === 'closed').length === 0 && (
+                {pastSessions.filter(s => s.status === 'closed').length === 0 && (
                   <tr>
                     <td colSpan={7} className="p-8 text-center text-sm text-muted-foreground">
                       {'წინა სესიები არ არის'}

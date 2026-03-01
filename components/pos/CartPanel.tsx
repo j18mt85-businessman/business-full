@@ -1,5 +1,7 @@
 'use client'
 
+// POS Cart Panel Component
+
 import type { CartItem, Customer } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
 import { Button } from '@/components/ui/button'

@@ -1,5 +1,7 @@
 'use client'
 
+// POS Product Grid Component
+
 import { useState, useMemo } from 'react'
 import type { Product } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'

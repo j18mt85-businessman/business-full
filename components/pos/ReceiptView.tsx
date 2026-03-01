@@ -1,5 +1,7 @@
 'use client'
 
+// POS Receipt View Component
+
 import type { Sale } from '@/lib/types'
 import { formatCurrency, formatDate, getPaymentLabel } from '@/lib/utils'
 import { useBranch } from '@/contexts/BranchContext'

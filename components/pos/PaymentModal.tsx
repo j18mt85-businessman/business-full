@@ -1,5 +1,7 @@
 'use client'
 
+// POS Payment Modal Component
+
 import { useState } from 'react'
 import type { PaymentMethod } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
