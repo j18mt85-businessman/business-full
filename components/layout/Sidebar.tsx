@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useBranch } from '@/contexts/BranchContext'
 import { useInventory } from '@/contexts/InventoryContext'
@@ -19,11 +19,14 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export function DastaSidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {
   const pathname = usePathname()
+  const params = useParams()
   const { branches, currentBranch, setCurrentBranch } = useBranch()
   const { alerts } = useInventory()
   const [branchOpen, setBranchOpen] = useState(false)
 
-  const branchBase = `/${currentBranch.id}`
+  // Use URL branchId as fallback when context is still loading
+  const branchId = currentBranch.id || (params?.branchId as string) || ''
+  const branchBase = `/${branchId}`
 
   function isActive(href: string) {
     const fullPath = `${branchBase}${href}`

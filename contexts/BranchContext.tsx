@@ -14,7 +14,7 @@ interface BranchContextType {
 }
 
 const FALLBACK_BRANCH: Branch = {
-  id: 'loading',
+  id: '',
   companyId: '',
   name: 'იტვირთება...',
   address: '',

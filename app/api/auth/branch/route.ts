@@ -28,8 +28,6 @@ export async function GET() {
       .limit(1)
       .single()
 
-    console.log('[v0] /api/auth/branch - user:', user.id, 'pb:', pb, 'pbError:', pbError?.message)
-
     if (pb?.branch_id) {
       return NextResponse.json({ branchId: pb.branch_id })
     }
