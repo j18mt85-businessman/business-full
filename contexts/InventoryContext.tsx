@@ -17,6 +17,9 @@ interface InventoryContextType {
   getProduct: (id: string) => Product | undefined
   getCategoryName: (id: string) => string
   updateStock: (productId: string, quantityChange: number) => void
+  addCategory: (category: Omit<Category, 'id'>) => void
+  updateCategory: (id: string, data: Partial<Category>) => void
+  deleteCategory: (id: string) => void
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined)
@@ -226,6 +229,71 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   const getCategoryName = useCallback((id: string) => categories.find(c => c.id === id)?.name || '', [categories])
 
+  const addCategory = useCallback(async (category: Omit<Category, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .insert({
+          name: category.name,
+          color: category.color || '#6B7280',
+          icon: category.icon || null,
+          company_id: company?.id,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        setCategories(prev => [...prev, {
+          id: data.id,
+          name: data.name,
+          color: data.color || '#6B7280',
+          icon: data.icon || undefined,
+        }])
+      }
+    } catch (err) {
+      console.error('Error adding category:', err)
+    }
+  }, [supabase, company?.id])
+
+  const updateCategory = useCallback(async (id: string, data: Partial<Category>) => {
+    try {
+      const updateData: Record<string, unknown> = {}
+      if (data.name !== undefined) updateData.name = data.name
+      if (data.color !== undefined) updateData.color = data.color
+      if (data.icon !== undefined) updateData.icon = data.icon || null
+
+      const { error } = await supabase
+        .from('categories')
+        .update(updateData)
+        .eq('id', id)
+
+      if (error) throw error
+
+      setCategories(prev => prev.map(c =>
+        c.id === id ? { ...c, ...data } : c
+      ))
+    } catch (err) {
+      console.error('Error updating category:', err)
+    }
+  }, [supabase])
+
+  const deleteCategory = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('categories')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw error
+
+      setCategories(prev => prev.filter(c => c.id !== id))
+    } catch (err) {
+      console.error('Error deleting category:', err)
+    }
+  }, [supabase])
+
   const updateStock = useCallback(async (productId: string, quantityChange: number) => {
     try {
       const product = products.find(p => p.id === productId)
@@ -250,7 +318,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <InventoryContext.Provider value={{
-      products, categories, alerts, loading, addProduct, updateProduct, deleteProduct, getProduct, getCategoryName, updateStock,
+      products, categories, alerts, loading, addProduct, updateProduct, deleteProduct, getProduct, getCategoryName, updateStock, addCategory, updateCategory, deleteCategory,
     }}>
       {children}
     </InventoryContext.Provider>

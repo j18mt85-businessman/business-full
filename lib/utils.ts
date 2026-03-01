@@ -13,20 +13,17 @@ export function formatCurrency(amount: number): string {
   return `${formatted}.${decPart} \u20BE`
 }
 
-// Format date in Georgian locale
+// Format date deterministically (avoids hydration mismatch from locale differences)
 export function formatDate(dateStr: string, options?: { time?: boolean }): string {
   const date = new Date(dateStr)
-  const dateFormatted = date.toLocaleDateString('ka-GE', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  })
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear()
+  const dateFormatted = `${day}.${month}.${year}`
   if (options?.time) {
-    const timeFormatted = date.toLocaleTimeString('ka-GE', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    return `${dateFormatted} ${timeFormatted}`
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${dateFormatted} ${hours}:${minutes}`
   }
   return dateFormatted
 }
