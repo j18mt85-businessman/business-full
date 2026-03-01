@@ -10,11 +10,12 @@ import { SIDEBAR_NAV } from '@/lib/constants'
 import {
   LayoutDashboard, ShoppingCart, Package, Tag, Receipt, Users, Truck,
   Landmark, Bell, Settings, ChevronDown, Check, Store, X, Calculator, Globe,
+  ClipboardCheck,
 } from 'lucide-react'
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, ShoppingCart, Package, Tag, Receipt, Users, Truck,
-  Landmark, Bell, Settings, Calculator, Globe,
+  Landmark, Bell, Settings, Calculator, Globe, ClipboardCheck,
 }
 
 export function DastaSidebar({ open, onClose }: { open?: boolean; onClose?: () => void }) {

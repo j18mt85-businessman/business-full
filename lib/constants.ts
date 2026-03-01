@@ -46,6 +46,7 @@ export const SIDEBAR_NAV = [
     items: [
       { label: 'პროდუქტები', href: '/inventory', icon: 'Package' },
       { label: 'კატეგორიები', href: '/categories', icon: 'Tag' },
+      { label: 'ინვენტარიზაცია', href: '/stock-take', icon: 'ClipboardCheck' },
     ],
   },
   {
