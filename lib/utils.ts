@@ -5,9 +5,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-// Format currency in Georgian Lari
+// Format currency in Georgian Lari (deterministic to avoid hydration mismatch)
 export function formatCurrency(amount: number): string {
-  return `${amount.toLocaleString('ka-GE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} \u20BE`
+  const fixed = amount.toFixed(2)
+  const [intPart, decPart] = fixed.split('.')
+  const formatted = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return `${formatted}.${decPart} \u20BE`
 }
 
 // Format date in Georgian locale
